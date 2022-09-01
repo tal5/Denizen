@@ -1,5 +1,6 @@
 package com.denizenscript.denizen.nms.interfaces;
 
+import com.denizenscript.denizencore.utilities.debugging.Debug;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -36,6 +37,7 @@ public interface SoundHelper {
         else {
             player.playSound(location, sound, volume, pitch);
         }
+        Debug.thisIsntAThing();
     }
 
     default void playSound(Player player, Location location, Sound sound, float volume, float pitch, String category) {
