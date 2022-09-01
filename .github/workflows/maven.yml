@@ -1,9 +1,6 @@
 name: Maven build test
 
-on:
-  pull_request:
-    branches:
-    - github_actions_test
+on: pull_request
 
 jobs:
   build:
@@ -15,17 +12,18 @@ jobs:
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-dependencies
-    - name: Build with Maven
-    # 1.16.5
+    # Set up Java 16
     - name: Set up JDK 16
       uses: actions/setup-java@v3
       with:
         java-version: '16'
         distribution: 'temurin'
+    # 1.16.5
     - name: Run 1.16.5 BuildTools
       uses: SpraxDev/Action-SpigotMC@v4
       with:
         versions: 1.16.5
+    # Set up Java 17
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
