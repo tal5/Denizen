@@ -37,7 +37,7 @@ public interface SoundHelper {
         else {
             player.playSound(location, sound, volume, pitch);
         }
-        Debug.log("Sound was played");
+        Debug.logg("Sound was played");
     }
 
     default void playSound(Player player, Location location, Sound sound, float volume, float pitch, String category) {
