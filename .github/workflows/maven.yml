@@ -96,5 +96,37 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+    - name: Cache 1.16.5
+      id: cache-1_16_5
+      uses: actions/cache@v3
+      with:
+        path: |
+            ~/.m2/repository/org/spigotmc/spigot/1.16.5-R0.1-SNAPSHOT/
+            ~/.m2/repository/org/spigotmc/minecraft-server/1.16.5-SNAPSHOT/
+        key: ${{ runner.os }}-spigot-1_16_5
+    - name: Cache 1.17.1
+      id: cache-1_17_1
+      uses: actions/cache@v3
+      with:
+        path: |
+            ~/.m2/repository/org/spigotmc/spigot/1.17.1-R0.1-SNAPSHOT/
+            ~/.m2/repository/org/spigotmc/minecraft-server/1.17.1-R0.1-SNAPSHOT/
+        key: ${{ runner.os }}-spigot-1_17_1
+    - name: Cache 1.18.2
+      id: cache-1_18_2
+      uses: actions/cache@v3
+      with:
+        path: |
+            ~/.m2/repository/org/spigotmc/spigot/1.18.2-R0.1-SNAPSHOT/
+            ~/.m2/repository/org/spigotmc/minecraft-server/1.18.2-R0.1-SNAPSHOT/
+        key: ${{ runner.os }}-spigot-1_18_2
+    - name: Cache 1.19.2
+      id: cache-1_19_2
+      uses: actions/cache@v3
+      with:
+        path: |
+            ~/.m2/repository/org/spigotmc/spigot/1.19.2-R0.1-SNAPSHOT/
+            ~/.m2/repository/org/spigotmc/minecraft-server/1.19.2-R0.1-SNAPSHOT/
+        key: ${{ runner.os }}-spigot-1_19_2
     - name: Build with Maven
       run: mvn -B verify
