@@ -15,6 +15,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.16.5-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_16_5
+        restore-keys: ${{ runner.os }}-spigot-1_16_5
     - name: Set up JDK 16
       uses: actions/setup-java@v3
       with:
@@ -36,6 +37,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.17.1-R0.1-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_17_1
+        restore-keys: ${{ runner.os }}-spigot-1_17_1
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -58,6 +60,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.18.2-R0.1-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_18_2
+        restore-keys: ${{ runner.os }}-spigot-1_18_2
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -80,6 +83,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.19.2-R0.1-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_19_2
+        restore-keys: ${{ runner.os }}-spigot-1_19_2
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -109,6 +113,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.16.5-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_16_5
+        restore-keys: ${{ runner.os }}-spigot-1_16_5
     - name: Cache 1.17.1
       id: cache-1_17_1
       uses: actions/cache@v3
@@ -118,6 +123,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.17.1-R0.1-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_17_1
+        restore-keys: ${{ runner.os }}-spigot-1_17_1
     - name: Cache 1.18.2
       id: cache-1_18_2
       uses: actions/cache@v3
@@ -127,6 +133,7 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.18.2-R0.1-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_18_2
+        restore-keys: ${{ runner.os }}-spigot-1_18_2
     - name: Cache 1.19.2
       id: cache-1_19_2
       uses: actions/cache@v3
@@ -136,5 +143,6 @@ jobs:
             ~/.m2/repository/org/spigotmc/minecraft-server/1.19.2-R0.1-SNAPSHOT/
             ~/.m2/repository/org/spigotmc/spigot-parent/
         key: ${{ runner.os }}-spigot-1_19_2
+        restore-keys: ${{ runner.os }}-spigot-1_19_2
     - name: Build with Maven
       run: mvn -B verify --file pom.xml
