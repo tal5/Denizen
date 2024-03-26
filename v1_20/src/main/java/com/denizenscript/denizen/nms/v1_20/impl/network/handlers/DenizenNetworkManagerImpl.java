@@ -84,6 +84,7 @@ public class DenizenNetworkManagerImpl extends Connection {
     public final DenizenPacketListenerImpl packetListener;
     public final ServerPlayer player;
     public int packetsSent, packetsReceived;
+    public List<Packet<ClientGamePacketListener>> toBundle = null;
 
     public DenizenNetworkManagerImpl(ServerPlayer entityPlayer, Connection oldManager) {
         super(getProtocolDirection(oldManager));
@@ -360,6 +361,9 @@ public class DenizenNetworkManagerImpl extends Connection {
             return null;
         }
         List<PacketHandler<?>> packetHandlers = DenizenNetworkManagerImpl.packetHandlers.get(packet.getClass());
+        if (packetHandlers == null) {
+            packetHandlers = DenizenNetworkManagerImpl.packetHandlers.get(null);
+        }
         if (packetHandlers != null) {
             for (PacketHandler<?> _packetHandler : packetHandlers) {
                 PacketHandler<Packet<ClientGamePacketListener>> packetHandler = (PacketHandler<Packet<ClientGamePacketListener>>) _packetHandler;
@@ -402,6 +406,7 @@ public class DenizenNetworkManagerImpl extends Connection {
         FakePlayerPacketHandlers.registerHandlers();
         HiddenEntitiesPacketHandlers.registerHandlers();
         HideParticlesPacketHandlers.registerHandlers();
+        PacketBundlerPacketHandler.register();
         PlayerHearsSoundEventPacketHandlers.registerHandlers();
         ProfileEditorImpl.registerHandlers();
         TablistUpdateEventPacketHandlers.registerHandlers();

@@ -163,4 +163,12 @@ public interface PacketHelper {
     default void sendEntityDataPacket(List<Player> players, Entity entity, List<Object> data) {
         throw new UnsupportedOperationException();
     }
+
+    default void startBundlingPackets(Player player) {
+        throw new UnsupportedOperationException();
+    }
+
+    default void stopAndSendBundledPackets(Player player) {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -6,6 +6,7 @@ import com.denizenscript.denizen.nms.v1_20.Handler;
 import com.denizenscript.denizen.nms.v1_20.ReflectionMappingsInfo;
 import com.denizenscript.denizen.nms.v1_20.impl.SidebarImpl;
 import com.denizenscript.denizen.nms.v1_20.impl.network.handlers.DenizenNetworkManagerImpl;
+import com.denizenscript.denizen.nms.v1_20.impl.network.handlers.packet.PacketBundlerPacketHandler;
 import com.denizenscript.denizen.scripts.commands.entity.TeleportCommand;
 import com.denizenscript.denizen.utilities.FormattedTextHelper;
 import com.denizenscript.denizen.utilities.Utilities;
@@ -411,6 +412,16 @@ public class PacketHelperImpl implements PacketHelper {
             }
             sendAsyncSafe(player, setEntityDataPacket);
         }
+    }
+
+    @Override
+    public void startBundlingPackets(Player player) {
+        PacketBundlerPacketHandler.startBundling(player);
+    }
+
+    @Override
+    public void stopAndSendBundledPackets(Player player) {
+        PacketBundlerPacketHandler.stopBundling(player);
     }
 
     public static void send(Player player, Packet<?> packet) {

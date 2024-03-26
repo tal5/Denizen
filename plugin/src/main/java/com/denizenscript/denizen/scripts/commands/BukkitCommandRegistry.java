@@ -90,6 +90,7 @@ public class BukkitCommandRegistry {
         registerCommand(AgeCommand.class);
         registerCommand(AttachCommand.class);
         registerCommand(AttackCommand.class);
+        registerCommand(BundleCommand.class);
         registerCommand(BurnCommand.class);
         registerCommand(CastCommand.class);
         registerCommand(EquipCommand.class);
