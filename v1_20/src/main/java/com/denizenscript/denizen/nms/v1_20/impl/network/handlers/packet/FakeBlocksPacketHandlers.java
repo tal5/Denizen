@@ -7,6 +7,7 @@ import com.denizenscript.denizen.objects.LocationTag;
 import com.denizenscript.denizen.utilities.blocks.ChunkCoordinate;
 import com.denizenscript.denizen.utilities.blocks.FakeBlock;
 import com.denizenscript.denizencore.utilities.ReflectionHelper;
+import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
@@ -45,8 +46,7 @@ public class FakeBlocksPacketHandlers {
         if (blocks == null || blocks.isEmpty()) {
             return chunkPacket;
         }
-        ClientboundLevelChunkWithLightPacket newPacket = FakeBlockHelper.handleMapChunkPacket(networkManager.player.getBukkitEntity().getWorld(), chunkPacket, chunkX, chunkZ, blocks);
-        return newPacket;
+        return FakeBlockHelper.handleMapChunkPacket(networkManager.player.getBukkitEntity().getWorld(), chunkPacket, chunkX, chunkZ, blocks);
     }
 
     public static ClientboundSectionBlocksUpdatePacket processSectionBlocksUpdatePacket(DenizenNetworkManagerImpl networkManager, ClientboundSectionBlocksUpdatePacket sectionUpdatePacket) throws Exception {
@@ -62,16 +62,12 @@ public class FakeBlocksPacketHandlers {
         if (!map.byChunk.containsKey(coordinateDenizen)) {
             return sectionUpdatePacket;
         }
-        ClientboundSectionBlocksUpdatePacket newPacket = new ClientboundSectionBlocksUpdatePacket(DenizenNetworkManagerImpl.copyPacket(sectionUpdatePacket));
-        LocationTag location = new LocationTag(networkManager.player.level().getWorld(), 0, 0, 0);
-        short[] originalOffsetArray = (short[])OFFSETARRAY_MULTIBLOCKCHANGE.get(newPacket);
-        BlockState[] originalDataArray = (BlockState[])BLOCKARRAY_MULTIBLOCKCHANGE.get(newPacket);
-        short[] offsetArray = Arrays.copyOf(originalOffsetArray, originalOffsetArray.length);
+        short[] originalOffsetArray = (short[]) OFFSETARRAY_MULTIBLOCKCHANGE.get(sectionUpdatePacket);
+        BlockState[] originalDataArray = (BlockState[]) BLOCKARRAY_MULTIBLOCKCHANGE.get(sectionUpdatePacket);
         BlockState[] dataArray = Arrays.copyOf(originalDataArray, originalDataArray.length);
-        OFFSETARRAY_MULTIBLOCKCHANGE.set(newPacket, offsetArray);
-        BLOCKARRAY_MULTIBLOCKCHANGE.set(newPacket, dataArray);
-        for (int i = 0; i < offsetArray.length; i++) {
-            short offset = offsetArray[i];
+        LocationTag location = new LocationTag(networkManager.player.level().getWorld(), 0, 0, 0);
+        for (int i = 0; i < originalOffsetArray.length; i++) {
+            short offset = originalOffsetArray[i];
             BlockPos pos = coord.relativeToBlockPos(offset);
             location.setX(pos.getX());
             location.setY(pos.getY());
@@ -81,7 +77,7 @@ public class FakeBlocksPacketHandlers {
                 dataArray[i] = FakeBlockHelper.getNMSState(block);
             }
         }
-        return newPacket;
+        return new ClientboundSectionBlocksUpdatePacket(coord, new ShortArraySet(originalOffsetArray), dataArray);
     }
 
     public static ClientboundBlockUpdatePacket processBlockUpdatePacket(DenizenNetworkManagerImpl networkManager, ClientboundBlockUpdatePacket blockUpdatePacket) {
@@ -92,8 +88,7 @@ public class FakeBlocksPacketHandlers {
         LocationTag loc = new LocationTag(networkManager.player.level().getWorld(), pos.getX(), pos.getY(), pos.getZ());
         FakeBlock block = FakeBlock.getFakeBlockFor(networkManager.player.getUUID(), loc);
         if (block != null) {
-            ClientboundBlockUpdatePacket newPacket = new ClientboundBlockUpdatePacket(blockUpdatePacket.getPos(), FakeBlockHelper.getNMSState(block));
-            return newPacket;
+            return new ClientboundBlockUpdatePacket(blockUpdatePacket.getPos(), FakeBlockHelper.getNMSState(block));
         }
         return blockUpdatePacket;
     }
