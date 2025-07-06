@@ -7,6 +7,7 @@ import com.denizenscript.denizen.utilities.blocks.ChunkCoordinate;
 import com.denizenscript.denizen.utilities.blocks.FakeBlock;
 import com.denizenscript.denizen.utilities.blocks.SectionCoordinate;
 import com.denizenscript.denizencore.utilities.ReflectionHelper;
+import com.denizenscript.denizencore.utilities.debugging.Debug;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -17,7 +18,7 @@ import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_21_R5.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v1_21_R5.util.CraftLocation;
 
-import java.lang.reflect.Field;
+import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,9 +36,9 @@ public class FakeBlocksPacketHandlers {
         return ((CraftBlockData) block.material.getModernData()).getState();
     }
 
-    public static Field SECTIONPOS_MULTIBLOCKCHANGE = ReflectionHelper.getFields(ClientboundSectionBlocksUpdatePacket.class).get(ReflectionMappingsInfo.ClientboundSectionBlocksUpdatePacket_sectionPos, SectionPos.class);
-    public static Field OFFSETARRAY_MULTIBLOCKCHANGE = ReflectionHelper.getFields(ClientboundSectionBlocksUpdatePacket.class).get(ReflectionMappingsInfo.ClientboundSectionBlocksUpdatePacket_positions, short[].class);
-    public static Field BLOCKARRAY_MULTIBLOCKCHANGE = ReflectionHelper.getFields(ClientboundSectionBlocksUpdatePacket.class).get(ReflectionMappingsInfo.ClientboundSectionBlocksUpdatePacket_states, BlockState[].class);
+    public static MethodHandle SECTION_BLOCKS_UPDATE_SECTION = ReflectionHelper.getFields(ClientboundSectionBlocksUpdatePacket.class).getGetter(ReflectionMappingsInfo.ClientboundSectionBlocksUpdatePacket_sectionPos, SectionPos.class);
+    public static MethodHandle SECTION_BLOCKS_UPDATE_POSITIONS = ReflectionHelper.getFields(ClientboundSectionBlocksUpdatePacket.class).getGetter(ReflectionMappingsInfo.ClientboundSectionBlocksUpdatePacket_positions, short[].class);
+    public static MethodHandle SECTION_BLOCKS_UPDATE_STATES = ReflectionHelper.getFields(ClientboundSectionBlocksUpdatePacket.class).getGetter(ReflectionMappingsInfo.ClientboundSectionBlocksUpdatePacket_states, BlockState[].class);
 
     public static Packet<ClientGamePacketListener> processLevelChunkWithLightPacket(DenizenNetworkManagerImpl networkManager, ClientboundLevelChunkWithLightPacket chunkPacket) {
         if (FakeBlock.blocks.isEmpty()) {
@@ -63,7 +64,7 @@ public class FakeBlocksPacketHandlers {
                 continue;
             }
             short[] inSectionOffsets = new short[blocksInSection.size()];
-            BlockState[] sectionBlocks = new BlockState[blocksBySection.size()];
+            BlockState[] sectionBlocks = new BlockState[blocksInSection.size()];
             for (int i = 0; i < blocksInSection.size(); i++) {
                 FakeBlock blockInSection = blocksInSection.get(i);
                 Location blockLocation = blockInSection.location;
@@ -77,7 +78,7 @@ public class FakeBlocksPacketHandlers {
         return new ClientboundBundlePacket(packets);
     }
 
-    public static ClientboundSectionBlocksUpdatePacket processSectionBlocksUpdatePacket(DenizenNetworkManagerImpl networkManager, ClientboundSectionBlocksUpdatePacket sectionUpdatePacket) throws IllegalAccessException {
+    public static ClientboundSectionBlocksUpdatePacket processSectionBlocksUpdatePacket(DenizenNetworkManagerImpl networkManager, ClientboundSectionBlocksUpdatePacket sectionUpdatePacket) throws Throwable {
         if (FakeBlock.blocks.isEmpty()) {
             return sectionUpdatePacket;
         }
@@ -85,14 +86,13 @@ public class FakeBlocksPacketHandlers {
         if (map == null) {
             return sectionUpdatePacket;
         }
-        SectionPos coord = (SectionPos) SECTIONPOS_MULTIBLOCKCHANGE.get(sectionUpdatePacket);
+        SectionPos coord = (SectionPos) SECTION_BLOCKS_UPDATE_SECTION.invokeExact(sectionUpdatePacket);
         ChunkCoordinate coordinateDenizen = new ChunkCoordinate(coord.getX(), coord.getZ(), networkManager.player.level().getWorld().getName());
         if (!map.byChunk.containsKey(coordinateDenizen)) {
             return sectionUpdatePacket;
         }
-        ClientboundSectionBlocksUpdatePacket newPacket = DenizenNetworkManagerImpl.copyPacket(sectionUpdatePacket, ClientboundSectionBlocksUpdatePacket.STREAM_CODEC);
-        short[] originalOffsetArray = (short[])OFFSETARRAY_MULTIBLOCKCHANGE.get(newPacket);
-        BlockState[] originalDataArray = (BlockState[])BLOCKARRAY_MULTIBLOCKCHANGE.get(newPacket);
+        short[] originalOffsetArray = (short[]) SECTION_BLOCKS_UPDATE_POSITIONS.invokeExact(sectionUpdatePacket);
+        BlockState[] originalDataArray = (BlockState[]) SECTION_BLOCKS_UPDATE_STATES.invokeExact(sectionUpdatePacket);
         BlockState[] dataArray = Arrays.copyOf(originalDataArray, originalDataArray.length);
         LocationTag location = new LocationTag(networkManager.player.level().getWorld(), 0, 0, 0);
         for (int i = 0; i < originalOffsetArray.length; i++) {
