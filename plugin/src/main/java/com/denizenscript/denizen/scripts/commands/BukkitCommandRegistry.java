@@ -92,6 +92,9 @@ public class BukkitCommandRegistry {
         registerCommand(AttackCommand.class);
         registerCommand(BurnCommand.class);
         registerCommand(CastCommand.class);
+        if (NMSHandler.getVersion().isAtLeast(NMSVersion.v1_20)) {
+            registerCommand(ClientAdjustCommand.class);
+        }
         registerCommand(EquipCommand.class);
         registerCommand(FakeEquipCommand.class);
         registerCommand(FakeInternalDataCommand.class);

@@ -810,6 +810,12 @@ public class EntityHelperImpl extends EntityHelper {
     }
 
     @Override
+    public List<Object> getInternalEntityData(Entity entity) {
+        List<SynchedEntityData.DataValue<?>> data = ((CraftEntity) entity).getHandle().getEntityData().getNonDefaultValues();
+        return data == null ? List.of() : (List<Object>) (Object) data;
+    }
+
+    @Override
     public void startUsingItem(LivingEntity entity, EquipmentSlot hand) {
         ((CraftLivingEntity) entity).getHandle().startUsingItem(hand == EquipmentSlot.HAND ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND);
     }

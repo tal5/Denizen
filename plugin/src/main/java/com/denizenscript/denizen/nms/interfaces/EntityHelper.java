@@ -475,6 +475,10 @@ public abstract class EntityHelper {
         throw new UnsupportedOperationException();
     }
 
+    public List<Object> getInternalEntityData(Entity entity) {
+        throw new UnsupportedOperationException();
+    }
+
     public void startUsingItem(LivingEntity entity, EquipmentSlot hand) {
         throw new UnsupportedOperationException();
     }
