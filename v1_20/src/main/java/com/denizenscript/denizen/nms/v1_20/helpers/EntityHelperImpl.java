@@ -815,7 +815,7 @@ public class EntityHelperImpl extends EntityHelper {
     }
 
     @Override
-    public List<Object> getInternalEntityData(Entity entity) {
+    public List<Object> getNonDefaultInternalEntityData(Entity entity) {
         List<SynchedEntityData.DataValue<?>> data = ((CraftEntity) entity).getHandle().getEntityData().getNonDefaultValues();
         return data == null ? List.of() : (List<Object>) (Object) data;
     }

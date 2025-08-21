@@ -410,11 +410,15 @@ public class PacketHelperImpl implements PacketHelper {
 
     @Override
     public void sendEntityDataPacket(List<Player> players, Entity entity, List<Object> data) {
+        if (data.isEmpty()) {
+            players.removeIf(player -> ((CraftPlayer) player).getHandle().connection == null);
+            return;
+        }
         ClientboundSetEntityDataPacket setEntityDataPacket = new ClientboundSetEntityDataPacket(entity.getEntityId(), (List<SynchedEntityData.DataValue<?>>) (Object) data);
         Iterator<Player> playerIterator = players.iterator();
         while (playerIterator.hasNext()) {
             Player player = playerIterator.next();
-            if (!DenizenNetworkManagerImpl.getConnection(player).isConnected()) {
+            if (((CraftPlayer) player).getHandle().connection == null) {
                 playerIterator.remove();
                 continue;
             }

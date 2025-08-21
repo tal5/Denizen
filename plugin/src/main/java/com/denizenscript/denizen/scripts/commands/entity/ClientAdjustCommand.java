@@ -83,10 +83,13 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
             if (player == null) {
                 throw new InvalidArgumentsRuntimeException("Must specify players to send adjustments to.");
             }
-            sendTo = List.of(player.getPlayerEntity());
+            sendTo = new ArrayList<>(List.of(player.getPlayerEntity()));
         }
         else {
-            sendTo = forPlayers.stream().map(PlayerTag::getPlayerEntity).toList();
+            sendTo = new ArrayList<>(forPlayers.size());
+            for (PlayerTag player : forPlayers) {
+                sendTo.add(player.getPlayerEntity());
+            }
         }
         if (frames == null && mechanism == null) {
             throw new InvalidArgumentsRuntimeException("Must specify either a list of frames or a mechanism to adjust.");
@@ -98,31 +101,30 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
             return;
         }
         final Entity entity = inputEntity.getBukkitEntity();
-        List<Object> originalData = NMSHandler.entityHelper.getInternalEntityData(entity);
         EntityTag copiedEntity = new EntityTag(entity.copy());
         if (mechanism != null) {
             copiedEntity.safeAdjust(new Mechanism(mechanism.asString(), value, scriptEntry.getContext()));
-            handleSingleDataModification(entity, copiedEntity, sendTo, originalData, scriptEntry);
+            handleSingleDataModification(entity, copiedEntity, sendTo, scriptEntry);
             return;
         }
         if (frames.size() == 1) {
             applyMechanisms(copiedEntity, frames.get(0), scriptEntry.getContext());
-            handleSingleDataModification(entity, copiedEntity, sendTo, originalData, scriptEntry);
+            handleSingleDataModification(entity, copiedEntity, sendTo, scriptEntry);
             return;
         }
         final List<List<Object>> internalFrames = new ArrayList<>(frames.size());
+        List<Object> lastFrame = List.of();
         for (MapTag frame : frames) {
             applyMechanisms(copiedEntity, frame, scriptEntry.getContext());
-            List<Object> modifiedData = NMSHandler.entityHelper.getInternalEntityData(copiedEntity.getBukkitEntity());
-            List<Object> internalFrame = new ArrayList<>(modifiedData);
-            if (!internalFrame.isEmpty()) {
-                internalFrame.removeAll(originalData);
-            }
-            originalData = modifiedData;
-            if (internalFrame.isEmpty()) {
+            List<Object> modifiedData = NMSHandler.entityHelper.getNonDefaultInternalEntityData(copiedEntity.getBukkitEntity());
+            if (modifiedData.isEmpty()) {
+                internalFrames.add(modifiedData);
                 continue;
             }
+            List<Object> internalFrame = new ArrayList<>(modifiedData);
+            internalFrame.removeAll(lastFrame);
             internalFrames.add(internalFrame);
+            lastFrame = modifiedData;
         }
         final long delayNanos = speed.getMillis() * 1_000_000L;
         if (delayNanos == 0) {
@@ -135,11 +137,11 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
         DenizenCore.runAsync(() -> {
             long expectedTime = System.nanoTime();
             for (List<Object> internalFrame : internalFrames) {
+                NMSHandler.packetHelper.sendEntityDataPacket(sendTo, entity, internalFrame);
                 // Entries can be removed by sendEntityDataPacket
                 if (sendTo.isEmpty()) {
                     break;
                 }
-                NMSHandler.packetHelper.sendEntityDataPacket(sendTo, entity, internalFrame);
                 LockSupport.parkNanos(delayNanos - (System.nanoTime() - expectedTime));
                 expectedTime += delayNanos;
             }
@@ -154,11 +156,8 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
         }
     }
 
-    public static void handleSingleDataModification(Entity original, EntityTag copy, List<Player> sendTo, List<Object> originalData, ScriptEntry scriptEntry) {
-        List<Object> modifiedData = NMSHandler.entityHelper.getInternalEntityData(copy.getBukkitEntity());
-        if (!modifiedData.isEmpty()) {
-            modifiedData.removeAll(originalData);
-        }
+    public static void handleSingleDataModification(Entity original, EntityTag copy, List<Player> sendTo, ScriptEntry scriptEntry) {
+        List<Object> modifiedData = NMSHandler.entityHelper.getNonDefaultInternalEntityData(copy.getBukkitEntity());
         if (!modifiedData.isEmpty()) {
             NMSHandler.packetHelper.sendEntityDataPacket(sendTo, original, modifiedData);
         }
