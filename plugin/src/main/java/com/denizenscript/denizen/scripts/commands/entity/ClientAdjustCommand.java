@@ -113,18 +113,9 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
             return;
         }
         final List<List<Object>> internalFrames = new ArrayList<>(frames.size());
-        List<Object> lastFrame = List.of();
         for (MapTag frame : frames) {
             applyMechanisms(copiedEntity, frame, scriptEntry.getContext());
-            List<Object> modifiedData = NMSHandler.entityHelper.getNonDefaultInternalEntityData(copiedEntity.getBukkitEntity());
-            if (modifiedData.isEmpty()) {
-                internalFrames.add(modifiedData);
-                continue;
-            }
-            List<Object> internalFrame = new ArrayList<>(modifiedData);
-            internalFrame.removeAll(lastFrame);
-            internalFrames.add(internalFrame);
-            lastFrame = modifiedData;
+            internalFrames.add(NMSHandler.entityHelper.packDirtyInternalEntityData(copiedEntity.getBukkitEntity()));
         }
         final long delayNanos = speed.getMillis() * 1_000_000L;
         if (delayNanos == 0) {
@@ -157,7 +148,7 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
     }
 
     public static void handleSingleDataModification(Entity original, EntityTag copy, List<Player> sendTo, ScriptEntry scriptEntry) {
-        List<Object> modifiedData = NMSHandler.entityHelper.getNonDefaultInternalEntityData(copy.getBukkitEntity());
+        List<Object> modifiedData = NMSHandler.entityHelper.packDirtyInternalEntityData(copy.getBukkitEntity());
         if (!modifiedData.isEmpty()) {
             NMSHandler.packetHelper.sendEntityDataPacket(sendTo, original, modifiedData);
         }

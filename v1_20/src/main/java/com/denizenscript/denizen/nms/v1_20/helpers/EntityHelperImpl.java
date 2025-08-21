@@ -815,8 +815,8 @@ public class EntityHelperImpl extends EntityHelper {
     }
 
     @Override
-    public List<Object> getNonDefaultInternalEntityData(Entity entity) {
-        List<SynchedEntityData.DataValue<?>> data = ((CraftEntity) entity).getHandle().getEntityData().getNonDefaultValues();
+    public List<Object> packDirtyInternalEntityData(Entity entity) {
+        List<SynchedEntityData.DataValue<?>> data = ((CraftEntity) entity).getHandle().getEntityData().packDirty();
         return data == null ? List.of() : (List<Object>) (Object) data;
     }
 
@@ -825,8 +825,12 @@ public class EntityHelperImpl extends EntityHelper {
         net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) entity).getHandle();
         net.minecraft.world.entity.Entity nmsCopy = nmsEntity.getType().create(nmsEntity.level());
         SynchedEntityData.DataItem<Object>[] nmsDataItems = getDataItems(nmsEntity), nmsCopyDataItems = getDataItems(nmsCopy);
+        // Set the main dirty value on the tracker
+        nmsCopy.getEntityData().markDirty(nmsCopyDataItems[0].getAccessor());
         for (int i = 0; i < nmsDataItems.length; i++) {
-            nmsCopyDataItems[i].setValue(nmsDataItems[i].getValue());
+            SynchedEntityData.DataItem<Object> nmsCopyDataItem = nmsCopyDataItems[i];
+            nmsCopyDataItem.setValue(nmsDataItems[i].getValue());
+            nmsCopyDataItem.setDirty(true);
         }
         return nmsCopy.getBukkitEntity();
     }

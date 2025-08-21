@@ -475,7 +475,7 @@ public abstract class EntityHelper {
         throw new UnsupportedOperationException();
     }
 
-    public List<Object> getNonDefaultInternalEntityData(Entity entity) {
+    public List<Object> packDirtyInternalEntityData(Entity entity) {
         throw new UnsupportedOperationException();
     }
 
