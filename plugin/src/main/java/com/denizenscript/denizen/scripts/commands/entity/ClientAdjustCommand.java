@@ -101,7 +101,7 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
             return;
         }
         final Entity entity = inputEntity.getBukkitEntity();
-        EntityTag copiedEntity = new EntityTag(entity.copy());
+        EntityTag copiedEntity = new EntityTag(NMSHandler.entityHelper.copyWithNetworkData(entity));
         if (mechanism != null) {
             copiedEntity.safeAdjust(new Mechanism(mechanism.asString(), value, scriptEntry.getContext()));
             handleSingleDataModification(entity, copiedEntity, sendTo, scriptEntry);

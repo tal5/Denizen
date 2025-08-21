@@ -479,6 +479,10 @@ public abstract class EntityHelper {
         throw new UnsupportedOperationException();
     }
 
+    public Entity copyWithNetworkData(Entity entity) {
+        throw new UnsupportedOperationException();
+    }
+
     public void startUsingItem(LivingEntity entity, EquipmentSlot hand) {
         throw new UnsupportedOperationException();
     }

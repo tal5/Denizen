@@ -16,7 +16,6 @@ import com.denizenscript.denizencore.utilities.ReflectionHelper;
 import com.denizenscript.denizencore.utilities.debugging.Debug;
 import com.denizenscript.denizencore.utilities.text.StringHolder;
 import io.netty.buffer.Unpooled;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
@@ -39,6 +38,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.CombatRules;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.PositionMoveRotation;
@@ -765,26 +765,27 @@ public class EntityHelperImpl extends EntityHelper {
         }
     }
 
-    public static final Field SynchedEntityData_itemsById = ReflectionHelper.getFields(SynchedEntityData.class).get(ReflectionMappingsInfo.SynchedEntityData_itemsById);
+    public static final MethodHandle SYNCHEDENTITYDATA_ITEMSBYID_GETTER = ReflectionHelper.getFields(SynchedEntityData.class).getGetter(ReflectionMappingsInfo.SynchedEntityData_itemsById, SynchedEntityData.DataItem[].class);
 
-    public static Int2ObjectMap<SynchedEntityData.DataItem<Object>> getDataItems(Entity entity) {
+    public static SynchedEntityData.DataItem<Object>[] getDataItems(net.minecraft.world.entity.Entity nmsEntity) {
         try {
-            return (Int2ObjectMap<SynchedEntityData.DataItem<Object>>) SynchedEntityData_itemsById.get(((CraftEntity) entity).getHandle().getEntityData());
+            return (SynchedEntityData.DataItem<Object>[]) SYNCHEDENTITYDATA_ITEMSBYID_GETTER.invokeExact(nmsEntity.getEntityData());
         }
-        catch (IllegalAccessException e) {
+        catch (Throwable e) {
             throw new RuntimeException(e); // Stop the code here to avoid NPEs down the road
         }
     }
 
     public static void convertToInternalData(Entity entity, MapTag internalData, BiConsumer<SynchedEntityData.DataItem<Object>, Object> processConverted) {
-        Int2ObjectMap<SynchedEntityData.DataItem<Object>> dataItemsById = getDataItems(entity);
+        net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) entity).getHandle();
+        SynchedEntityData.DataItem<Object>[] dataItemsById = getDataItems(nmsEntity);
         for (Map.Entry<StringHolder, ObjectTag> entry : internalData.entrySet()) {
-            int id = EntityDataNameMapper.getIdForName(((CraftEntity) entity).getHandle().getClass(), entry.getKey().low);
+            int id = EntityDataNameMapper.getIdForName(nmsEntity.getClass(), entry.getKey().low);
             if (id == -1) {
                 Debug.echoError("Invalid internal data key: " + entry.getKey());
                 return;
             }
-            SynchedEntityData.DataItem<Object> dataItem = dataItemsById.get(id);
+            SynchedEntityData.DataItem<Object> dataItem = dataItemsById[id];
             if (dataItem == null) {
                 Debug.echoError("Invalid internal data id '" + id + "': couldn't be matched to any internal data for entity of type '" + entity.getType() + "'.");
                 return;
@@ -813,6 +814,17 @@ public class EntityHelperImpl extends EntityHelper {
     public List<Object> getNonDefaultInternalEntityData(Entity entity) {
         List<SynchedEntityData.DataValue<?>> data = ((CraftEntity) entity).getHandle().getEntityData().getNonDefaultValues();
         return data == null ? List.of() : (List<Object>) (Object) data;
+    }
+
+    @Override
+    public Entity copyWithNetworkData(Entity entity) {
+        net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) entity).getHandle();
+        net.minecraft.world.entity.Entity nmsCopy = nmsEntity.getType().create(nmsEntity.level(), EntitySpawnReason.COMMAND);
+        SynchedEntityData.DataItem<Object>[] nmsDataItems = getDataItems(nmsEntity), nmsCopyDataItems = getDataItems(nmsCopy);
+        for (int i = 0; i < nmsDataItems.length; i++) {
+            nmsCopyDataItems[i].setValue(nmsDataItems[i].getValue());
+        }
+        return nmsCopy.getBukkitEntity();
     }
 
     @Override
