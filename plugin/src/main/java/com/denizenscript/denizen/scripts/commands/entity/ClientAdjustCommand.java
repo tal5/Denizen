@@ -31,6 +31,26 @@ import java.util.concurrent.locks.LockSupport;
 
 public class ClientAdjustCommand extends AbstractCommand implements Holdable {
 
+    // <--[command]
+    // @Name ClientAdjust
+    // @Syntax clientadjust [<entity>] [<mechanisms>|.../<mechanism>(:<value>)] (for:<player>|...) (speed:<duration>)
+    // @Required 2
+    // @Maximum 4
+    // @Short Adjusts certain entity mechanisms without modifying the entity's data, making the change only visible for some players.
+    // @Group entity
+    // @Description
+    // Adjusts the provided mechanisms on an entity for the specified player's view only, optionally taking a list of maps as "frames" to send in the specified speed.
+    // The actual entity is not modified, but it will appear to be for the specified players (or the linked player by default).
+    // Note that not all values can be edited this way, specifically only values in <@link url https://minecraft.wiki/w/Java_Edition_protocol/Entity_metadata> are currently supported.
+    //
+    // The mechanisms can be provided as either a single "mechanism(:value)" pair (similarly to <@link command Adjust>), or as a list of <@link objecttype MapTag> with mechanism names and values.
+    // When specifying a list of MapTag frames you can optionally specify "speed" for the delay between each frame, supporting sub-tick durations.
+    
+    // @Usage
+    //
+    //
+    // -->
+
     public ClientAdjustCommand() {
         setName("clientadjust");
         setSyntax("clientadjust [<entity>] [<mechanisms>|.../<mechanism>(:<value>)] (for:<player>|...) (speed:<duration>)");
@@ -44,7 +64,7 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
     public void parseArgs(ScriptEntry scriptEntry) throws InvalidArgumentsException {
         boolean foundEntity = false;
         for (Argument arg : scriptEntry) {
-            if (!scriptEntry.hasObject("entity") && arg.matchesArgumentType(EntityTag.class)) {
+            if (!foundEntity && arg.matchesArgumentType(EntityTag.class)) {
                 scriptEntry.addObject("entity", arg.asType(EntityTag.class));
                 foundEntity = true;
             }
@@ -63,6 +83,9 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
             else {
                 arg.reportUnhandled();
             }
+        }
+        if (!foundEntity) {
+            throw new InvalidArgumentsException("Must specify an entity to adjust.");
         }
     }
 
@@ -117,14 +140,14 @@ public class ClientAdjustCommand extends AbstractCommand implements Holdable {
             applyMechanisms(copiedEntity, frame, scriptEntry.getContext());
             internalFrames.add(NMSHandler.entityHelper.packDirtyInternalEntityData(copiedEntity.getBukkitEntity()));
         }
-        final long delayNanos = speed.getMillis() * 1_000_000L;
-        if (delayNanos == 0) {
+        if (speed == null || speed.getSeconds() == 0) {
             for (List<Object> internalFrame : internalFrames) {
                 NMSHandler.packetHelper.sendEntityDataPacket(sendTo, entity, internalFrame);
             }
             scriptEntry.setFinished(true);
             return;
         }
+        final long delayNanos = speed.getMillis() * 1_000_000L;
         DenizenCore.runAsync(() -> {
             long expectedTime = System.nanoTime();
             for (List<Object> internalFrame : internalFrames) {
